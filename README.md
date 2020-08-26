@@ -28,11 +28,11 @@ It should compile and generate a new jar with dependencies at
 ```
 e.g.
 ``` 
-./scripts/run.sh "src/test/resources/validInput.txt"
+./scripts/validate.sh "src/test/resources/validInput.txt"
 ``` 
-and the program should return a result message of the validation. 
+and the program should return a result message for the validation. 
 
 NOTE : File ending with _rename needs to be renamed to actual file name and 
-need to have/assign executable permissions.
+need to have/assigned executable permission.
 
 
