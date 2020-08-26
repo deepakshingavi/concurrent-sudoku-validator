@@ -11,6 +11,7 @@ Validates the user input sudoku board(9x9)
 * scripts - Contains support shell script to build and run the project
 
 #### Unit tests
+Below should run the Junit tests and generate Maven Surefire reports
 ```shell script
 ./scripts/execUnitTests.sh
 ```
