@@ -1,0 +1,1 @@
+java -jar target/simple-sudoku-validator-1.0-jar-with-dependencies.jar $1

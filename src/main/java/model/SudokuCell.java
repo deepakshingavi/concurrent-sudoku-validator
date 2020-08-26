@@ -20,7 +20,7 @@ public class SudokuCell {
     private final int column;
 
     //Sudoku cell's value
-    private final int value;
+    private final char value;
 
     //Sudoku cell's identifier
     private final String id;
@@ -30,7 +30,7 @@ public class SudokuCell {
     //Sudoku divisor to identify the board
     private static final int CELL_BOARD_DIVIDER = 3;
 
-    public SudokuCell(int row, int column, int value, CELL_ID cellId) {
+    public SudokuCell(int row, int column, char value, CELL_ID cellId) {
         this.row = row;
         this.column = column;
         this.value = value;
@@ -69,7 +69,7 @@ public class SudokuCell {
         return column;
     }
 
-    public int getValue() {
+    public char getValue() {
         return value;
     }
 

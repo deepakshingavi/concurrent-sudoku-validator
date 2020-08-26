@@ -5,7 +5,10 @@ import model.SudokuCell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 
 /**
@@ -15,25 +18,17 @@ public class SudokuValidator {
 
     final static Logger logger = LoggerFactory.getLogger(SudokuValidator.class.getName());
 
-    // Sudoku Matrix
-    private final int[][] sudokuMatrix;
+    //Minimum allowed value
+    private static final int LOWER_BOUND = 1;
 
-    //Minimum allowed value - 1
-    private static final int LOWER_BOUND = 0;
-
-    //Maximum allowed value + 1
-    private static final int UPPER_BOUND = 10;
+    //Maximum allowed value
+    private static final int UPPER_BOUND = 9;
 
     //Expected no .of unique object to be added for a valid SUDOKU board
     private static final int TOTAL_MATRIX_OBJECTS = 243;
 
-    /**
-     *
-     * @param sudokuMatrix - User input Sudoku board
-     */
-    public SudokuValidator(int[][] sudokuMatrix) {
-        this.sudokuMatrix = sudokuMatrix;
-    }
+
+    final static int MATRIX_SIZE = 9;
 
     /**
      * Parses the Sudoku and looks for duplicates in
@@ -41,16 +36,12 @@ public class SudokuValidator {
      * COLUMN
      * 3x3 board
      * @return Validation message
+     * @param sudokuMatrix
      */
-    public String validate() {
+    public String validate(char[][] sudokuMatrix) {
         logger.info("Validation begin");
         final Set<SudokuCell> sudokuCells = new HashSet<>(TOTAL_MATRIX_OBJECTS);
         int arrSize = sudokuMatrix.length;
-
-        //Validate the row size
-        if (arrSize != (UPPER_BOUND - 1)) {
-            return getIncorrectRowSizeErrMsg( arrSize);
-        }
 
         //Iterate through row
         for (int row = 0; row < arrSize; row++) {
@@ -58,16 +49,13 @@ public class SudokuValidator {
 
             //Iterate through column
             for (int column = 0; column < sudokuMatrix[row].length; column++) {
-                int value = sudokuMatrix[row][column];
+                char value = sudokuMatrix[row][column];
 
                 //Create cell object with row id
                 final SudokuCell sudokuCellRow = new SudokuCell(row, column, value, CELL_ID.ROW);
-                if (rowLength != (UPPER_BOUND - 1)) {
-                    return getIncorrectColumnSizeErrMsg(sudokuCellRow, rowLength);
-                }
 
                 //Check if the value lies between 1 and 9
-                if (LOWER_BOUND < value && value < UPPER_BOUND) {
+                if ( value != ' ') {
 
                     //Check if the value exist in the same row
                     if (sudokuCells.add(sudokuCellRow)) {
@@ -91,8 +79,6 @@ public class SudokuValidator {
                     } else {
                         return getErrorMsg(sudokuCellRow);
                     }
-                } else {
-                    return getInvalidValueMsg(sudokuCellRow);
                 }
                 logger.debug("Cell(" + row + "," + column + ") is valid.");
             }
@@ -110,17 +96,6 @@ public class SudokuValidator {
     public String getErrorMsg(SudokuCell cell) {
         StringBuilder errorMsg = new StringBuilder();
         errorMsg.append("Cell(").append(cell.getRow()).append(",").append(cell.getColumn()).append(") has a duplicate value for ").append(cell.getId());
-        return logErrorAndReturn(errorMsg);
-    }
-
-    /**
-     * Generates error message for any value outside [1-9] with cell details.
-     * @param cell - Invalid Sudoku cell
-     * @return - Error message
-     */
-    public String getInvalidValueMsg(SudokuCell cell) {
-        StringBuilder errorMsg = new StringBuilder();
-        errorMsg.append("Cell(").append(cell.getRow()).append(",").append(cell.getColumn()).append(") has a invalid value ").append(cell.getValue());
         return logErrorAndReturn(errorMsg);
     }
 
@@ -157,4 +132,61 @@ public class SudokuValidator {
         return errorMsg.toString();
     }
 
+    public Character parseAndReturnCellValue(int row,int column,String cellValue) {
+        if(null==cellValue){
+            throw new RuntimeException("Cell value cannot be NULL.");
+        }
+        cellValue = cellValue.trim();
+        if(cellValue.isEmpty()){
+            return ' ';
+        }
+        final int cellIntValue = Integer.parseInt(cellValue);
+        if (LOWER_BOUND > cellIntValue || cellIntValue > UPPER_BOUND) {
+            final String errMsg = getInvalidValueMsg(row, column, cellValue);
+            throw new RuntimeException(errMsg);
+        }
+
+        return (char)(cellIntValue + '0');
+    }
+
+    /**
+     * Generates error message for any value outside [1-9] with cell details.
+     * @param row - Invalid Sudoku row
+     * @param column - Invalid Sudoku column
+     * @return - Error message
+     */
+    public String getInvalidValueMsg(int row,int column,String value) {
+        StringBuilder errorMsg = new StringBuilder();
+        errorMsg.append("Cell(").append(row).append(",").append(column).append(") has a invalid value ").append(value);
+        return logErrorAndReturn(errorMsg);
+    }
+
+    /**
+     *
+     * @param filePath
+     * @return
+     */
+    public char[][] loadSudokuFile( String filePath) throws FileNotFoundException {
+        char[][] sudokuMatrix = new char[MATRIX_SIZE][MATRIX_SIZE];
+        try (final Scanner scanner = new Scanner(new File(filePath))) {
+            int row = 0;
+            while (scanner.hasNextLine()) {
+                final String[] cellValues = scanner.nextLine().split(",");
+                if (cellValues.length != MATRIX_SIZE) {
+                    throw new RuntimeException("Incorrect no. of value at line " + row);
+                }
+                for (int column = 0; column < MATRIX_SIZE; column++) {
+                    sudokuMatrix[row][column] = parseAndReturnCellValue(row, column, cellValues[column]);
+                }
+                row++;
+            }
+            if (row != MATRIX_SIZE) {
+                final String incorrectRowSizeErrMsg = getIncorrectRowSizeErrMsg(row);
+                throw new RuntimeException(incorrectRowSizeErrMsg);
+            }
+        }  finally {
+            logger.info("Sudoku file validated");
+        }
+        return sudokuMatrix;
+    }
 }
